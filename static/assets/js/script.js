@@ -260,4 +260,4 @@ document.cookie = "cookieName=cookieValue; expires=Thu, 02 Feb 2025 12:00:00 UTC
 // Get a cookie
 // Retrieve a cookie
 var cookieValue = document.cookie.replace(/(?:(?:^|.*;\s*)cookieName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-console.log(cookieValue);
+console.log("Why are you looking at the console? You won't find anything here. Go to the Application tab in the DevTools and look under Cookies.");
