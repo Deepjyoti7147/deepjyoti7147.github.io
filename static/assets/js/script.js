@@ -254,3 +254,10 @@ srtop.reveal('.experience .timeline .container', { interval: 400 });
 /* SCROLL CONTACT */
 srtop.reveal('.contact .container', { delay: 400 });
 srtop.reveal('.contact .container .form-group', { delay: 400 });
+
+// Set a cookie
+document.cookie = "cookieName=cookieValue; expires=Thu, 02 Feb 2025 12:00:00 UTC; path=/";
+// Get a cookie
+// Retrieve a cookie
+var cookieValue = document.cookie.replace(/(?:(?:^|.*;\s*)cookieName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+console.log(cookieValue);
