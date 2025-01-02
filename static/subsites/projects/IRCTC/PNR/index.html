@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNR Status Check</title>
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #34a853;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 2rem;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tile {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 250px;
+            width: 100%;
+        }
+
+        .tile:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        }
+
+        .tile-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tile-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .tile-description {
+            color: #666;
+            line-height: 1.5;
+            font-size: 1.1rem;
+        }
+
+        .pnr-check-section {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            padding: 0.8rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            width: 200px;
+        }
+
+        button {
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background-color: #1565c0;
+        }
+
+        .result {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .tile {
+                min-height: 200px;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>PNR Status Check</h1>
+    </header>
+
+    <div class="container">
+        <div class="tile">
+            <div class="tile-icon">🛤️</div>
+            <h2 class="tile-title">Check Your Train's PNR Status</h2>
+            <p class="tile-description">Enter your PNR number to get the status of your train.</p>
+
+            <div class="pnr-check-section">
+                <div class="input-container">
+                    <input type="text" id="pnrInput" placeholder="Enter your PNR number" required>
+                    <button onclick="checkPNR()">Check Status</button>
+                </div>
+                <div id="result" class="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkPNR() {
+            const pnrNumber = document.getElementById("pnrInput").value;
+
+            if (pnrNumber) {
+                const data = null;
+
+                const xhr = new XMLHttpRequest();
+                xhr.withCredentials = true;
+
+                xhr.addEventListener('readystatechange', function () {
+                    if (this.readyState === this.DONE) {
+                        const response = JSON.parse(this.responseText);
+                        const resultDiv = document.getElementById("result");
+
+                        // Check if the response has valid data
+                        if (response) {
+                            resultDiv.innerHTML = `
+                                <h3>PNR Status:</h3>
+                                <p><strong>PNR Number:</strong> ${pnrNumber}</p>
+                                <p><strong>Status:</strong> ${response.status}</p>
+                                <p><strong>Train Name:</strong> ${response.trainName}</p>
+                                <p><strong>Journey Date:</strong> ${response.journeyDate}</p>
+                            `;
+                        } else {
+                            resultDiv.innerHTML = `<p>Invalid PNR number or no data available.</p>`;
+                        }
+                    }
+                });
+
+                xhr.open('GET', `https://pnr-status-indian-railway.p.rapidapi.com/pnr-check/${pnrNumber}`);
+                xhr.setRequestHeader('x-rapidapi-key', '1fc6589865msh9ae2c153b78bb92p112467jsnb6fd9d8527a8');
+                xhr.setRequestHeader('x-rapidapi-host', 'pnr-status-indian-railway.p.rapidapi.com');
+
+                xhr.send(data);
+            } else {
+                alert("Please enter a PNR number.");
+            }
+        }
+    </script>
+</body>
+</html>

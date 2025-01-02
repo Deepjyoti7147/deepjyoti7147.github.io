@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Train Status</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .search-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #1557b0;
+        }
+
+        .status-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .station {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .current-station {
+            background: #e8f0fe;
+            border-radius: 6px;
+        }
+
+        @media (max-width: 600px) {
+            .input-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="search-box">
+            <div class="input-group">
+                <input type="text" id="trainNumber" placeholder="Train Number (e.g., 12051)">
+                <input type="date" id="departureDate">
+                <button onclick="checkStatus()">Check Status</button>
+            </div>
+            <div class="error" id="errorMsg"></div>
+        </div>
+
+        <div class="loading" id="loading">Fetching train status...</div>
+        <div class="status-card" id="statusResult"></div>
+    </div>
+
+    <script>
+        // Set default date as today
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+        document.getElementById('departureDate').value = formattedDate;
+
+        function formatDateForAPI(dateStr) {
+            return dateStr.replace(/-/g, '');
+        }
+
+        function checkStatus() {
+            const trainNumber = document.getElementById('trainNumber').value;
+            const departureDate = formatDateForAPI(document.getElementById('departureDate').value);
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('statusResult');
+            const errorMsg = document.getElementById('errorMsg');
+
+            if (!trainNumber || !departureDate) {
+                errorMsg.textContent = 'Please enter both train number and departure date';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            errorMsg.style.display = 'none';
+
+            const xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+
+            xhr.addEventListener('readystatechange', function() {
+                if (this.readyState === this.DONE) {
+                    loading.style.display = 'none';
+                    try {
+                        const response = JSON.parse(this.responseText);
+                        displayStatus(response);
+                    } catch (e) {
+                        showError('Error processing train status');
+                    }
+                }
+            });
+
+            const url = `https://indian-railway-irctc.p.rapidapi.com/api/trains/v1/train/status?departure_date=${departureDate}&isH5=true&client=web&train_number=${trainNumber}`;
+            
+            xhr.open('GET', url);
+            xhr.setRequestHeader('x-rapidapi-key', '1fc6589865msh9ae2c153b78bb92p112467jsnb6fd9d8527a8');
+            xhr.setRequestHeader('x-rapidapi-host', 'indian-railway-irctc.p.rapidapi.com');
+            xhr.setRequestHeader('x-rapid-api', 'rapid-api-database');
+            xhr.send(null);
+        }
+
+        function displayStatus(data) {
+            const result = document.getElementById('statusResult');
+            
+            if (data.error || !data.body) {
+                showError('No status information available');
+                return;
+            }
+
+            const status = data.body;
+            let html = `
+                <h2>Train Status</h2>
+                <p><strong>Current Station:</strong> ${status.current_station}</p>
+                <p><strong>Status:</strong> ${status.train_status_message}</p>
+                <p><strong>Last Updated:</strong> ${status.time_of_availability}</p>
+
+                <div class="station-list">
+                    <h3>Station Schedule</h3>
+                    ${status.stations.map(station => `
+                        <div class="station ${station.stationCode === status.current_station ? 'current-station' : ''}">
+                            <strong>${station.stationName} (${station.stationCode})</strong><br>
+                            Arrival: ${station.arrivalTime || '--'} | 
+                            Departure: ${station.departureTime || '--'} |
+                            Platform: ${station.expected_platform || '--'}
+                        </div>
+                    `).join('')}
+                </div>`;
+
+            result.innerHTML = html;
+            result.style.display = 'block';
+        }
+
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
